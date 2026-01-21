@@ -3,6 +3,7 @@ import { Shield, Calendar, AlertTriangle } from 'lucide-react';
 import { GameState, CommandLog, Difficulty } from '../types/game';
 import { supabase } from '../lib/supabase';
 import { parseCommand } from '../lib/commandParser';
+import { AIAnalysis } from '../lib/aiCommandProcessor';
 import ResourcePanel from './ResourcePanel';
 import CommandCenter from './CommandCenter';
 import TacticalMap from './TacticalMap';
@@ -18,6 +19,7 @@ export default function GameInterface({ initialCountry, difficulty, year, onExit
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [commandLogs, setCommandLogs] = useState<CommandLog[]>([]);
   const [loading, setLoading] = useState(true);
+  const [lastAIAnalysis, setLastAIAnalysis] = useState<AIAnalysis | null>(null);
 
   useEffect(() => {
     initializeGame();
@@ -252,11 +254,12 @@ export default function GameInterface({ initialCountry, difficulty, year, onExit
           <ResourcePanel gameState={gameState} />
 
           <div className="grid lg:grid-cols-2 gap-6">
-            <TacticalMap gameState={gameState} />
+            <TacticalMap gameState={gameState} aiAnalysis={lastAIAnalysis} />
             <CommandCenter
               gameState={gameState}
               onCommand={handleCommand}
               commandLogs={commandLogs}
+              onAIAnalysis={setLastAIAnalysis}
             />
           </div>
         </div>

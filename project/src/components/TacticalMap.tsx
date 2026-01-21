@@ -1,12 +1,14 @@
 import { useEffect, useRef } from 'react';
-import { MapPin, Crosshair } from 'lucide-react';
+import { MapPin, Crosshair, AlertCircle } from 'lucide-react';
 import { GameState } from '../types/game';
+import { AIAnalysis } from '../lib/aiCommandProcessor';
 
 interface TacticalMapProps {
   gameState: GameState;
+  aiAnalysis?: AIAnalysis | null;
 }
 
-export default function TacticalMap({ gameState }: TacticalMapProps) {
+export default function TacticalMap({ gameState, aiAnalysis }: TacticalMapProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -82,6 +84,23 @@ export default function TacticalMap({ gameState }: TacticalMapProps) {
       ctx.fillText('HOSTILE', targetX, targetY + 40);
     }
 
+    if (aiAnalysis?.targetLocation) {
+      const aiX = (aiAnalysis.targetLocation.x / 100) * canvas.width;
+      const aiY = (aiAnalysis.targetLocation.y / 100) * canvas.height;
+
+      ctx.shadowBlur = 15;
+      ctx.shadowColor = '#ffff00';
+      ctx.strokeStyle = '#ffff00';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(aiX, aiY, 20, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.fillStyle = '#ffff00';
+      ctx.font = 'bold 9px Arial';
+      ctx.fillText('AI TARGET', aiX, aiY + 35);
+    }
+
     const pulseRadius = 40 + Math.sin(Date.now() / 500) * 5;
     ctx.strokeStyle = 'rgba(0, 255, 255, 0.3)';
     ctx.lineWidth = 1;
@@ -89,7 +108,7 @@ export default function TacticalMap({ gameState }: TacticalMapProps) {
     ctx.arc(centerX, centerY, pulseRadius, 0, Math.PI * 2);
     ctx.stroke();
 
-  }, [gameState]);
+  }, [gameState, aiAnalysis]);
 
   return (
     <div className="bg-gray-900/80 border-2 border-cyan-500/40 rounded-lg overflow-hidden backdrop-blur-sm" dir="rtl">
@@ -128,15 +147,32 @@ export default function TacticalMap({ gameState }: TacticalMapProps) {
                 <span>هدف معادي</span>
               </div>
             )}
+            {aiAnalysis && (
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-yellow-400 animate-pulse"></div>
+                <span>هدف AI</span>
+              </div>
+            )}
           </div>
         </div>
 
-        <div className="absolute bottom-4 right-4 bg-black/70 border border-cyan-500/30 rounded p-3 text-xs">
+        <div className="absolute bottom-4 right-4 bg-black/70 border border-cyan-500/30 rounded p-3 text-xs max-w-xs">
           <div className="text-cyan-400 font-bold mb-2">معلومات تكتيكية</div>
           <div className="space-y-1 text-gray-300">
             <div>الإحداثيات: 35.0°N 44.0°E</div>
             <div>التوقيت: {new Date().toLocaleTimeString('ar-SA')}</div>
             <div>الحالة: {gameState.at_war ? 'قتالية' : 'استعداد'}</div>
+            {aiAnalysis && (
+              <>
+                <div className="border-t border-cyan-500/30 mt-2 pt-2">
+                  <div className="text-yellow-400 font-bold text-xs mb-1">تحليل AI النشط</div>
+                  <div className="text-xs text-yellow-100">
+                    <div>النوع: {aiAnalysis.commandType}</div>
+                    <div>القيمة: {aiAnalysis.strategicValue}</div>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
